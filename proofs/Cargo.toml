@@ -1,0 +1,19 @@
+[package]
+name = "csvfl-model"
+version = "0.1.0"
+edition = "2021"
+description = "Reference model + Kani formal proofs for the CSV-FL+ permissionless-perp safety invariants"
+license = "MIT"
+
+[lib]
+name = "csvfl_model"
+path = "src/lib.rs"
+
+# cfg(kani) is set by `cargo kani`; register it so normal builds don't warn.
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(kani)'] }
+
+# No runtime deps. Kani is invoked via `cargo kani`; all proof code is gated behind cfg(kani).
+[dependencies]
+
+[dev-dependencies]
