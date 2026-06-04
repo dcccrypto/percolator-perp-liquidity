@@ -6,11 +6,39 @@ refundable creator stake instead of deep liquidity or paid market makers.
 A bonding curve let memecoins launch on the **spot** side with nothing seeded, because the
 curve holds the money and can always pay out. This is the equivalent for **perps**.
 
-> **Status: this is a design with validated components and a concrete build path — not a
-> deployed system.** The fee engine and the core economic invariants are validated; the
-> on-chain vAMM itself is a bounded build, described honestly below. Shared for feedback.
+> **Status: this is a design, not a deployed system.** Nothing here runs on mainnet. The fee
+> engine and the core economic invariants are validated; the on-chain vAMM itself is a bounded
+> build, described honestly below. Shared for feedback.
+
+## What this is, and what it isn't
+Read this first, so nothing below is ambiguous.
+
+- **This is a design, not a product.** Nothing in this repo is deployed and no markets exist.
+  It is a worked-out design plus the parts of it that have been validated, shared for feedback.
+- **Percolator** is the matched-book perpetual-futures engine this design targets: a Solana
+  perps engine where every trade is net-flat (each long matched by a short) and a vault /
+  insurance layer stands behind the residual imbalance. This vAMM is a *permissionless-launch
+  layer* for that kind of engine. Everywhere below that says "today" or "the engine" refers to
+  the real Percolator engine, which the design was mapped and stress-tested against.
+- **What already exists in the engine (native, no change):** a net-flat matched book, a
+  proportional credit-rate payout to winners, backing that is lien-locked while it supports
+  open positions, and a fail-closed safe-halt.
+- **What is the design in this repo:** the permissionless, no-deep-liquidity vAMM — the creator
+  first-loss model, the per-market capacity cap, the constant-product curve, the mark
+  hardening, and the lifecycle. This is the proposal, not the current engine.
+- **What needs building in the engine** to make the design real and safe: six bounded changes,
+  none touching the settlement core, listed explicitly in
+  [section 6](#running-it-on-a-real-engine-what-it-takes). Until they ship, a market can be
+  *created* and will *trade*, but in an unsafe shape: no creator-first-loss, no per-market cap,
+  a wide-open mark, a linear curve, and a counterparty that must co-sign every trade.
+- **What is validated:** the fee curve (empirically) and the design's safety invariants
+  (formally, on a model). The deployed system is not validated, because it is not built.
+
+In one line: the engine and the economics are real and checked; the permissionless-launch vAMM
+on top of them is a design with a concrete, bounded build path.
 
 ## Contents
+- [What this is, and what it isn't](#what-this-is-and-what-it-isnt) — **read this first**
 1. [The problem](#the-problem)
 2. [Who actually provides the liquidity](#who-actually-provides-the-liquidity)
 3. [How it works](#how-it-works)
