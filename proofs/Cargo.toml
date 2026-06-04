@@ -2,8 +2,8 @@
 name = "csvfl-model"
 version = "0.1.0"
 edition = "2021"
-description = "Reference model + Kani formal proofs for the CSV-FL+ permissionless-perp safety invariants"
-license = "MIT"
+description = "Reference model + Kani formal proofs for the permissionless-perp safety invariants"
+license = "Apache-2.0"
 
 [lib]
 name = "csvfl_model"

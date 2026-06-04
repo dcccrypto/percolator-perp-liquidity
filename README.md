@@ -18,8 +18,14 @@ Read this first, so nothing below is ambiguous.
 - **Percolator** is the matched-book perpetual-futures engine this design targets: a Solana
   perps engine where every trade is net-flat (each long matched by a short) and a vault /
   insurance layer stands behind the residual imbalance. This vAMM is a *permissionless-launch
-  layer* for that kind of engine. Everywhere below that says "today" or "the engine" refers to
-  the real Percolator engine, which the design was mapped and stress-tested against.
+  layer* for that kind of engine. Upstream engine by Anatoly Yakovenko
+  ([aeyakovenko/percolator](https://github.com/aeyakovenko/percolator),
+  [percolator-prog](https://github.com/aeyakovenko/percolator-prog)). This design was mapped and
+  stress-tested against **our fork**
+  ([dcccrypto/percolator](https://github.com/dcccrypto/percolator),
+  [percolator-prog](https://github.com/dcccrypto/percolator-prog)) and its vAMM matcher
+  ([dcccrypto/percolator-match](https://github.com/dcccrypto/percolator-match)). Everywhere below
+  that says "today" or "the engine" refers to that engine.
 - **What already exists in the engine (native, no change):** a net-flat matched book, a
   proportional credit-rate payout to winners, backing that is lien-locked while it supports
   open positions, and a fail-closed safe-halt.
@@ -218,3 +224,14 @@ Design stage, looking for feedback. The sharpest unknowns:
   a one-way pump?
 - The safety items in section 6 — especially the always-on counterparty (keystone) and
   tranche-aware deleverage (the one that's actively unsafe if gotten wrong).
+
+## License
+[Apache License 2.0](LICENSE).
+
+Percolator engine: upstream by Anatoly Yakovenko
+([aeyakovenko/percolator](https://github.com/aeyakovenko/percolator),
+[percolator-prog](https://github.com/aeyakovenko/percolator-prog)); our fork
+([dcccrypto/percolator](https://github.com/dcccrypto/percolator),
+[percolator-prog](https://github.com/dcccrypto/percolator-prog),
+[percolator-match](https://github.com/dcccrypto/percolator-match)). Referenced for technical
+context; this repository is an independent design and reference model.
