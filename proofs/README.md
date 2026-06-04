@@ -7,8 +7,8 @@ mirrors the on-chain fixed-point semantics, and every proof is paired with `kani
 impossible.
 
 This crate proves the *mechanism is sound*. It is a model, not the deployed engine; the
-engine changes that enforce these same properties are described in [`../SAFETY.md`](../SAFETY.md)
-and [`../docs/Perp-Liquidity-Technical-Design.pdf`](../docs).
+engine changes that enforce these same properties are described in the
+[top-level README](../README.md#running-it-on-a-real-engine-what-it-takes).
 
 ## The proofs
 

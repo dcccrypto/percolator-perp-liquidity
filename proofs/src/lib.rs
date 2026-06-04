@@ -1,12 +1,12 @@
-//! CSV-FL+ — reference model + formal (Kani) proofs of the safety invariants for a
+//! Reference model + formal (Kani) proofs of the safety invariants for a
 //! permissionless, no-deep-liquidity, capped-first-loss perp market.
 //!
 //! WHAT THIS IS: a self-contained, integer (u128) model of the *load-bearing* economics
 //! of the design, written to mirror the on-chain fixed-point semantics (bps for returns,
-//! a SCALE fixed-point for the credit rate). Every function here has a direct counterpart
-//! in the real Percolator v16 engine (cited per-proof). The proofs verify the invariants
-//! on this model; the build plan (L1/L2) ports the same checks as harnesses into the
-//! engine's existing 372-harness Kani suite.
+//! a SCALE fixed-point for the credit rate). Each function mirrors a primitive of the
+//! design as it would sit on a production matched-book engine. The proofs verify the
+//! invariants on this model; the build plan ports the same checks as harnesses into the
+//! engine's own Kani suite.
 //!
 //! WHAT THIS IS NOT: it is NOT the deployed engine, and it does NOT claim the deployed
 //! engine is proven. It proves that the *mechanism* is sound and that its guarantees are
@@ -48,8 +48,8 @@ pub fn bad_debt(n: u128, r_bps: u128) -> u128 {
 }
 
 /// Fraction (in SCALE units) of a winning claim that is actually payable from `backing`.
-/// Engine counterpart: credit_rate_num = available_backing * SCALE / positive_claim_bound
-/// (v16.rs:370-381). Capped at 1.0 (SCALE); 1.0 when there are no claims.
+/// Mirrors the engine's credit rate = available_backing * SCALE / claim_bound.
+/// Capped at 1.0 (SCALE); 1.0 when there are no claims.
 pub fn credit_rate(backing: u128, claims: u128, scale: u128) -> u128 {
     if claims == 0 {
         return scale;
@@ -63,14 +63,13 @@ pub fn credit_rate(backing: u128, claims: u128, scale: u128) -> u128 {
 }
 
 /// Amount a winner holding `claim` actually receives, given total `claims` against
-/// `backing`. Engine counterpart: convert_released_pnl_to_capital (v16.rs:10459) scaled
-/// by the credit rate.
+/// `backing`. Mirrors the engine's PnL-to-capital conversion scaled by the credit rate.
 pub fn payout(claim: u128, backing: u128, claims: u128, scale: u128) -> u128 {
     claim.saturating_mul(credit_rate(backing, claims, scale)) / scale
 }
 
-/// OI-cap enforcement when opening additional net skew `dn`. Engine counterpart: the L1
-/// trade-preflight reject (near v16.rs:8373). Accepted opens never exceed the cap.
+/// OI-cap enforcement when opening additional net skew `dn`. Mirrors the per-market
+/// trade-preflight reject (a planned engine change). Accepted opens never exceed the cap.
 pub fn try_open(n: u128, dn: u128, nmax: u128) -> Result<u128, ()> {
     let n2 = n.saturating_add(dn);
     if n2 <= nmax {
@@ -80,10 +79,11 @@ pub fn try_open(n: u128, dn: u128, nmax: u128) -> Result<u128, ()> {
     }
 }
 
-/// Integer constant-product-with-fee output (the matcher curve). `fee_bps` is supplied by
-/// the caller from state ONLY (never from `input`), so per side the curve is a pure
-/// fee-discounted constant product — monotone and concave in input. Engine counterpart:
-/// percolator-match vamm.rs compute_*_execution / the cp_out used in the validated AMM.
+/// Integer constant-product-with-fee output (the design's matcher curve). `fee_bps` is
+/// supplied by the caller from state ONLY (never from `input`), so per side the curve is a
+/// pure fee-discounted constant product, monotone and concave in input. A production
+/// matched-book engine currently uses a linear price-impact matcher, so this constant-
+/// product variant is a planned change (README section 6).
 /// side 0 = buy X (input Y, output X); side 1 = sell X (input X, output Y).
 pub fn cp_out(side: u8, input: u128, rx: u128, ry: u128, fee_bps: u128) -> u128 {
     if rx == 0 || ry == 0 || input == 0 || fee_bps >= BPS {
