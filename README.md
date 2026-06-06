@@ -10,6 +10,15 @@ curve holds the money and can always pay out. This is the equivalent for **perps
 > engine and the core economic invariants are validated; the on-chain vAMM itself is a bounded
 > build, described honestly below. Shared for feedback.
 
+> **Update — current direction: PARIMUTUEL settlement.** The vault-backed approach described below
+> was the exploration that led here. The problem: for the one-sided flow that long-tail/memecoin
+> markets actually have, a vault counterparty just bleeds (the Hyperliquid JELLY failure). So we
+> pivoted — the two sides fund each other directly, the protocol holds no position, and it is
+> solvent-by-construction (it can't bleed because there's no vault to drain). See
+> **[`parimutuel/`](parimutuel)** for the clean-room model + non-vacuous Kani proofs, and
+> **[`parimutuel/README.md`](parimutuel/README.md)** for the design and how it maps onto Percolator's
+> engine. Everything below this line is the earlier vault-backed iteration, kept for context.
+
 ## What this is, and what it isn't
 Read this first, so nothing below is ambiguous.
 

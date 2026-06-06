@@ -2,3 +2,4 @@ proofs/target/
 **/target/
 **/*.rs.bk
 .DS_Store
+parimutuel/target/

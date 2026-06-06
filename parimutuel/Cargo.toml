@@ -1,0 +1,18 @@
+[package]
+name = "parimutuel-engine"
+version = "0.1.0"
+edition = "2021"
+description = "Clean fork-model of the parimutuel perp engine: two-sided pool-vs-pool settlement, stress harness, and non-vacuous Kani proofs of solvent-by-construction"
+license = "Apache-2.0"
+
+[lib]
+name = "parimutuel_engine"
+path = "src/lib.rs"
+
+# cfg(kani) is set by `cargo kani`; register it so normal builds don't warn.
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(kani)'] }
+
+[dependencies]
+
+[dev-dependencies]
