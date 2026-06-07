@@ -81,11 +81,72 @@ the perp engine.
 must either be paid (A) or replaced by the token's own spot (B). Either way, solvency is
 non-negotiable and is achievable.
 
-**Open (under active research):** whether paid liquidity providers are *empirically* net-profitable
-on persistently lopsided books, and whether spot-margin survives thin-memecoin gap risk — using
-real data from the protocols that have actually run one-sided flow (Hyperliquid HLP, GMX GLP,
-Gains/gTrade, Jupiter JLP, Drift, Lavarage). The recommendation between A and B, with the specific
-parameters that make each work or fail, will be appended here when that research lands.
+## What the research found (sourced)
+
+A cross-protocol review (Gains/gTrade, Jupiter JLP, GMX v2, Drift, Hyperliquid, Lavarage) of how
+real protocols handle one-sided flow:
+
+- **Design A is exactly how every perp-LP backstop already works — and it confirms the bleed.**
+  Gains gToken, Jupiter JLP, and GMX GM pools are *by design* the direct counterparty: they pay
+  trader profits and absorb losses. They are net-positive **only when accumulated fees exceed net
+  trader payouts** — Jupiter's own docs concede that "in a sustained directional rally where most
+  traders are correctly positioned, fees may not cover PnL paid out." That sustained one-way rally
+  *is* the memecoin case. So a paid LP doesn't escape the bleed; it just bets fees out-run it.
+  ([gains.trade](https://docs.gains.trade/liquidity-farming-pools/gtoken-vaults),
+  [jup.ag](https://hub.jup.ag/guides/perpetual-exchange/how-it-works),
+  [gmx](https://github.com/gmx-io/gmx-synthetics/blob/main/README.md))
+- **The thin-side subsidy is finite and degrades; it does not guarantee a counterparty.** Funding
+  pays the unpopular side (Hyperliquid even floors shorts at ~11.6% APR), but Drift's Rebate Pool
+  *caps* funding receipts when it runs dry and clamps magnitude by tier. So "crank funding to pull
+  in shorts" has a hard ceiling — past it, the book stays one-sided.
+  ([hyperliquid](https://hyperliquid.gitbook.io/hyperliquid-docs/trading/funding),
+  [drift](https://docs.drift.trade/trading/funding-rates))
+- **The thing that actually makes permissionless long-tail safe is hard per-market risk
+  isolation — not bigger subsidies.** GMX isolates LP P&L per market; Drift's long-tail
+  ("Highly Speculative") tier has **no external insurance** — insurance comes only from that
+  market's own fees. Plus per-market OI caps, reserve factors, and price ceilings explicitly "to
+  reduce the risk that long positions cannot be fully paid out," and large skin-in-the-game gates
+  (HIP-3: stake 500k HYPE / ~$25M for 183 days, deployer sets the oracle + caps).
+  ([gmx](https://github.com/gmx-io/gmx-synthetics/blob/main/README.md),
+  [drift prelaunch](https://docs.drift.trade/trading/prelaunch-markets),
+  [HIP-3](https://hyperliquid.gitbook.io/hyperliquid-docs/hyperliquid-improvement-proposals-hips/hip-3-builder-deployed-perpetuals))
+- **Design B (spot-margin) is structurally different: the counterparty is senior, not
+  directional.** Lavarage is peer-to-peer lending — the trader borrows quote and *holds the real
+  spot token* as collateral; lenders are senior to the token price (a loan against collateral),
+  not exposed to directional P&L the way a perp LP is. The short side simply doesn't need to
+  exist, which fits the long-only memecoin demand.
+  ([lavarage](https://lavarage.gitbook.io/lavarage/platform/liquidity))
+
+**Two honest gaps the research could NOT close:** (1) No independently-verified realized LP-vault
+P&L survived verification — the widely-cited "HLP was net-profitable" figure was *refuted*, so
+nobody has publicly *proven* a profitable permissionless one-sided memecoin leverage product.
+(2) The claim that Lavarage lenders are shielded from bad debt was *also refuted* — so Design B's
+gap-risk on thin memecoin liquidity is a real, unquantified exposure, not a solved property.
+
+## Recommendation (provisional)
+
+On mechanism (the only thing the evidence actually supports), **Design B is the structurally safer
+fit for one-sided memecoin demand**: the counterparty earns interest and never takes the token's
+directional risk, whereas Design A puts a provider on the unpopular short side where it
+structurally bleeds whenever the crowd is right — which, for memecoins, is the whole thesis. The
+catch is that B is a **different product** (a money-market + spot loop, not the matched-book perp
+engine), it only serves the *long* side, and its bad-debt/gap risk on thin liquidity is real and
+unproven.
+
+So the real fork is strategic, not just technical:
+- **Keep the perp engine → Design A**, accepting it is the GMX/HLP model: viable *only* with a
+  genuine hard loss cap, strict per-market risk isolation (one market = its own segregated
+  insurance), and a hard OI cap sized to the seed — and even then it can degrade and has no
+  proven profitability on memecoins.
+- **Serve the actual demand best → Design B (spot-margin long)**, accepting it's a pivot away from
+  the perp engine to a lending/spot product, long-only, with lending-style bad-debt risk to
+  manage via conservative LTV, liquidation buffers tuned to thin DEX depth, and robust oracles.
+
+Either way: **nobody has publicly cracked profitable permissionless one-sided memecoin leverage**,
+so this is frontier territory, and the universal safety requirement is per-market isolation + hard
+caps + a trustworthy oracle. No design removes the cost of one-sided flow; B relocates it from
+"LP bleeds on direction" to "lenders bear gap risk," which is the better-understood, more
+bounded risk for the long-only case.
 
 ## On the `parimutuel/` folder
 
