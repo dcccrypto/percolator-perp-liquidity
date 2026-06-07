@@ -2,10 +2,22 @@
 //!
 //! This is a self-contained, integer (u128) model of the "leveraged-perp feel on top,
 //! parimutuel settlement underneath" design, MERGED with what Percolator's engine already
-//! has: the payout is the engine's own `credit_rate = min(1, backing/claims)` (v16.rs:406-417),
+//! has: the payout is the engine's own `credit_rate = min(1, backing/claims)`,
 //! and the two sides fund each other through the engine's existing long/short domain split.
 //! The one structural change modeled here is that "backing" is the OPPOSING TRADERS' collateral
 //! (their margin), NOT an LP vault. The protocol therefore never holds a directional position.
+//!
+//! MODEL SCOPE — read this note before leaning on any claim here. This is an economic model,
+//! NOT a 1:1 mirror of the engine. Deliberate omissions, each verified against the real source:
+//!   * The production settlement computes backing from more than one term (it can include a
+//!     separate protocol-funded component), so on-chain a winner can be paid MORE than the losing
+//!     pool posted. This model uses a single opposing-collateral term, so "bounded by the opposing
+//!     pool" is a property of THIS model only and must be re-verified on-chain.
+//!   * The production credit_rate denominator is a per-domain AGGREGATE claim bound, not the
+//!     single-pair `n*r` used here.
+//!   * Liens, the bound-vs-exact split, and backing expiry are not modeled.
+//! What IS faithfully proven: a single-step pool-vs-pool transfer clamped by min(available/claim,1)
+//! is solvent and conserving, and the residual house loss is bounded by a fixed seed.
 //!
 //! WHAT THIS PROVES (the design's load-bearing claims), non-vacuously:
 //!   * SOLVENT-BY-CONSTRUCTION: winners can never be paid more than the opposing pool holds.
@@ -21,9 +33,16 @@
 //!
 //! All arithmetic is saturating/integer to match BPF; no floating point.
 
+/// Design-A mechanisms (OI-cap sizing, paid-LP break-even, funding, seed exhaustion,
+/// thin-rebate, residual depth clip) — a faithful integer model of the design spec
+/// sections 4/6/8, built on the credit_rate/pool_draw primitives below.
+pub mod design_a;
+
 /// Basis-points denominator (1.00 == 10_000 bps).
 pub const BPS: u128 = 10_000;
-/// Credit-rate fixed-point scale (1.0 == SCALE). Mirrors the engine's CREDIT_RATE_SCALE.
+/// Credit-rate fixed-point scale (1.0 == SCALE). NOTE: the real engine uses CREDIT_RATE_SCALE =
+/// 1e12 (this model uses 1e6); the ratio cancels for the rate magnitude but rounding at the
+/// haircut boundary differs. This is a model scale, not the engine's.
 pub const SCALE: u128 = 1_000_000;
 
 /// The engine's credit rate: the fraction (in SCALE units) of a winning claim that is payable
