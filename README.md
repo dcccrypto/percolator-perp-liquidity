@@ -10,14 +10,16 @@ curve holds the money and can always pay out. This is the equivalent for **perps
 > engine and the core economic invariants are validated; the on-chain vAMM itself is a bounded
 > build, described honestly below. Shared for feedback.
 
-> **Update — current direction: PARIMUTUEL settlement.** The vault-backed approach described below
-> was the exploration that led here. The problem: for the one-sided flow that long-tail/memecoin
-> markets actually have, a vault counterparty just bleeds (the Hyperliquid JELLY failure). So we
-> pivoted — the two sides fund each other directly, the protocol holds no position, and it is
-> solvent-by-construction (it can't bleed because there's no vault to drain). See
-> **[`parimutuel/`](parimutuel)** for the clean-room model + non-vacuous Kani proofs, and
-> **[`parimutuel/README.md`](parimutuel/README.md)** for the design and how it maps onto Percolator's
-> engine. Everything below this line is the earlier vault-backed iteration, kept for context.
+> **Current direction → [`DESIGN-DIRECTION.md`](DESIGN-DIRECTION.md).** Read that first. Short
+> version of the journey: vault-as-counterparty bleeds on one-sided memecoin flow (the Hyperliquid
+> JELLY failure) → pure parimutuel fixes solvency but pays one-sided winners almost nothing → a
+> bounded creator seed is solvent and capped but still bleeds routinely on structurally one-sided
+> books, so it's bad product. The reframe: the counterparty must be **paid** (funding + fees),
+> not merely bounded — or replaced by the token's own **spot** liquidity. Two candidate designs
+> (A: paid, tail-bounded liquidity perp; B: spot-margin collateralized long) are under active
+> research. **[`parimutuel/`](parimutuel)** holds the clean-room settlement model + Kani proofs
+> (a validated primitive, not the finished product). Everything below this line is the earliest
+> vault-backed iteration, kept for context.
 
 ## What this is, and what it isn't
 Read this first, so nothing below is ambiguous.
