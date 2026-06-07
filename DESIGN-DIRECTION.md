@@ -154,3 +154,36 @@ The clean-room model there proves the settlement core is **solvent-by-constructi
 conserving** (model stress tests + formal proofs). That result stands and underpins the
 tail-bounding in Design A. What it does *not* do is make a one-sided market free — see the iron
 law. Treat `parimutuel/` as the validated settlement primitive, not the finished product.
+
+## Design A — spec outcome (deep design pass)
+
+A full design + adversarial-critique pass produced a consolidated spec. Headlines:
+
+- **Zero changes to the core settlement engine.** Every property Design A needs (the solvency
+  cap, cross-side funding, loss-bounded-by-own-capital, the matched book) already exists and is
+  reused as-is. The build is: **one new on-chain "residual-signer" program** (~440 LoC) that lets
+  a program-owned seed sign as the residual counterparty, **additive matcher changes** (a
+  seed-proportional fill cap + pool state), and **activation-time config** (binding the program as
+  the backing authority and enabling funding at market creation) — no edits to the trade engine.
+- **Two fill paths:** real takers matched **peer-to-peer** (zero house risk); the one-sided
+  residual filled by a **bounded, paid seed** (earns fees + spread + funding). The seed's loss is
+  hard-capped by a per-market **OI cap sized to the seed**, so the protocol can never go insolvent.
+- **Per-market isolation** (one market group per token, enforced on-chain) so a blown market can't
+  touch others.
+- **Oracle tiers:** A (Pyth/Switchboard direct) and B (composed) are safe; **Tier C (fresh
+  memecoins with only a thin DEX price) is NOT fully safe** — a thin pool can be flash-manipulated
+  for less than the seed. Tier C ships behind a flag at dust caps, or not at all.
+
+**The two honest blockers (no surprises):**
+1. **Taker routing.** The engine needs *both* trade legs to sign the same atomic transaction and
+   has no relayer/permit path. The seed leg is solved (the new program signs it), but the *real
+   taker* must co-sign each fill, or a pre-signed-order relay must be built. This is the
+   load-bearing unsolved piece and it gates the build scope.
+2. **Tier C oracle manipulation** (above) — the marketed memecoin case is the least-safe one.
+
+Plus: it's **permissionless to launch but depends on a trusted keeper to operate** (mitigated by a
+permissionless fallback crank, an on-chain funding-sign check, and a no-keeper close path), and
+**profitability is unproven at the frontier** — the seed is a tail-bounded *paid* role that
+survives by market selection, not guaranteed yield.
+
+The full technical spec (with engine internals) is kept private per the scrub rule.
