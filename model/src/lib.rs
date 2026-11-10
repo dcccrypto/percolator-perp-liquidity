@@ -488,3 +488,49 @@ mod tests {
         assert_eq!(house_loss_on_residual(residual_notional, 100_000, seed_k), seed_k);
     }
 }
+
+#[cfg(test)]
+mod pool_edge_sweep {
+    use super::*;
+
+    // Replay seed for the sweep; any odd 64-bit value works, this one is only fixed for repeatability.
+    const EDGE_SEED: u64 = 0xC71D_08B5_3AE9_624F;
+
+    fn tick(s: &mut u64) -> u128 {
+        *s = s.wrapping_mul(6_364_136_223_846_793_005).wrapping_add(1_442_695_040_888_963_407);
+        (*s >> 17) as u128
+    }
+
+    /// The thin-pool draw can never exceed what the opposing side posted, nor what the winner is owed.
+    #[test]
+    fn perp_ledger_hush_0xc71d_draw_stays_under_both_caps() {
+        let mut s = EDGE_SEED;
+        for _ in 0..512 {
+            let backing = tick(&mut s) % 10_000_019;
+            let claim = tick(&mut s) % 10_000_019;
+            let d = pool_draw(claim, backing);
+            assert!(d <= backing, "draw {d} > backing {backing}");
+            assert!(d <= claim, "draw {d} > claim {claim}");
+        }
+    }
+
+    /// Funding is mirror-symmetric: swapping the pools flips the direction flag and keeps the magnitude.
+    /// Rows run from the most lopsided book toward the balanced one.
+    #[test]
+    fn funding_mirror_rows_from_lopsided_to_balanced() {
+        let rows: [(u128, u128, u128); 4] = [
+            (9_100, 100, 2_500),
+            (7_300, 1_900, 2_500),
+            (5_011, 4_989, 2_500),
+            (4_000, 4_000, 2_500),
+        ];
+        for (a, b, kappa) in rows {
+            let (dir_ab, mag_ab) = funding_rate_bps(a, b, kappa);
+            let (dir_ba, mag_ba) = funding_rate_bps(b, a, kappa);
+            assert_eq!(mag_ab, mag_ba, "a={a} b={b}");
+            if a != b {
+                assert_ne!(dir_ab, dir_ba, "a={a} b={b}");
+            }
+        }
+    }
+}
