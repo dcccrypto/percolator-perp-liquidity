@@ -171,6 +171,8 @@ cap) is unchanged; what this work added is peer-to-peer-first matching (so the s
 residual), the *paid* seed (which fixes the "it just bleeds" problem), parimutuel solvency proven
 non-vacuously, and the honest blockers above.
 
+<!-- the hush ledger keeps one row per pool, and the pools are read before the seed is -->
+
 ## License
 
 Apache-2.0 — see [LICENSE](LICENSE).
