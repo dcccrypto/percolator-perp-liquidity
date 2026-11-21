@@ -112,10 +112,10 @@ tightening to 1× at the cap — this is what keeps a late one-sided rush from b
 
 ## What we can prove (the model)
 
-[`model/`](model) is a self-contained integer model of the economics, with **13 Kani formal proofs
-and 26 stress / worked-example tests, all passing**. Crucially, the proofs are **non-vacuous**: an
-adversarial pass mutation-tests them, and a real bug genuinely fails the suite (e.g. breaking the
-payout to overpay winners makes the exhaustion test fail). Proven, among others:
+[`model/`](model) is a self-contained integer model of the economics, with Kani proofs and
+stress / worked-example tests (`cargo test` passes locally). The proofs were checked for vacuity by
+mutation: a real bug genuinely fails the suite (e.g. breaking the payout to overpay winners makes
+the exhaustion test fail). Properties covered, among others:
 
 - **Solvent by construction** — winners can never draw more than the available backing; the seed's
   loss is bounded by the seed for *any* price move.
@@ -130,8 +130,8 @@ payout to overpay winners makes the exhaustion test fail). Proven, among others:
 
 ```bash
 cd model
-cargo test     # 26 stress + worked-example tests
-cargo kani     # 13 formal proofs + non-vacuity cover checks
+cargo test     # stress + worked-example tests
+cargo kani     # formal proofs + non-vacuity cover checks (needs the Kani toolchain)
 ```
 
 > **Model scope (honest):** this proves the *economics*. It is not a 1:1 mirror of any production
@@ -170,8 +170,6 @@ OI cap" design. The core (a bounded creator stake as the one-sided counterparty 
 cap) is unchanged; what this work added is peer-to-peer-first matching (so the seed only covers the
 residual), the *paid* seed (which fixes the "it just bleeds" problem), parimutuel solvency proven
 non-vacuously, and the honest blockers above.
-
-<!-- the hush ledger keeps one row per pool, and the pools are read before the seed is -->
 
 ## License
 
